@@ -1362,6 +1362,36 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
 .notif-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#FF4D4D;border:2px solid #070810;}
 .app-content{padding:30px 32px 72px;}
 
+/* ── MOBILE BOTTOM NAV ── */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(7,8,16,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,0.07);z-index:200;padding:6px 0 max(8px,env(safe-area-inset-bottom));}
+.mob-nav-inner{display:flex;justify-content:space-around;align-items:center;}
+.mob-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;padding:6px 14px;cursor:pointer;color:rgba(255,255,255,0.3);font-size:9px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;transition:color 0.15s;}
+.mob-nav-btn svg{opacity:0.35;transition:opacity 0.15s;}
+.mob-nav-btn.active{color:#4D9DFF;}
+.mob-nav-btn.active svg{opacity:1;}
+
+/* ── RESPONSIVE BREAKPOINT ── */
+@media(max-width:768px){
+  .sidebar{display:none!important;}
+  .mob-nav{display:block;}
+  .app-content{padding:16px 14px 88px;}
+  .app-topbar{padding:0 14px;height:50px;}
+  .ticker-strip{display:none!important;}
+  .topbar-notif{display:none;}
+  .topbar-page{font-size:14px;}
+  .dash-hero{grid-template-columns:1fr!important;gap:12px;}
+  .invest-hero-bar{flex-direction:column!important;align-items:flex-start!important;gap:12px;}
+  .ihb-stats{gap:16px!important;flex-wrap:wrap;}
+  .plan-grid{grid-template-columns:1fr!important;}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)!important;}
+  .activity-card{overflow-x:auto;}
+  .portfolio-card{padding:20px;}
+  .settings-grid{grid-template-columns:1fr!important;}
+  .kyc-cols{flex-direction:column!important;}
+  .withdraw-addr-list{font-size:12px;}
+  .spm-val{font-size:16px;}
+}
+
 /* DASHBOARD */
 .dash-hero{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-bottom:20px;}
 .portfolio-card{background:linear-gradient(145deg,rgba(0,88,255,0.12),rgba(0,20,80,0.4));border:1px solid rgba(0,88,255,0.2);border-radius:18px;padding:28px;position:relative;overflow:hidden;}
@@ -2072,9 +2102,32 @@ function buildTicker(mountId){
   if(livePriceData&&livePriceData.bitcoin){updateLiveTickers();}
   else{el.innerHTML='<div class="ticker-item"><span class="t-name" style="color:rgba(255,255,255,0.2);">BTC</span><span class="t-price" style="color:rgba(255,255,255,0.18);">Loading…</span></div><div class="ticker-item"><span class="t-name" style="color:rgba(255,255,255,0.2);">ETH</span><span class="t-price" style="color:rgba(255,255,255,0.18);">Loading…</span></div>';}
 }
+function buildMobileNav(activePage){
+  var existing=document.getElementById('mob-nav-bar');
+  if(!existing){
+    var nav=document.createElement('div');
+    nav.id='mob-nav-bar';nav.className='mob-nav';
+    nav.innerHTML='<div class="mob-nav-inner">'
+      +'<button class="mob-nav-btn" id="mnb-dashboard" onclick="showAppPage(\'dashboard\')">'
+      +'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Home</button>'
+      +'<button class="mob-nav-btn" id="mnb-invest" onclick="showAppPage(\'invest\')">'
+      +'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Invest</button>'
+      +'<button class="mob-nav-btn" id="mnb-returns" onclick="showAppPage(\'returns\')">'
+      +'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Returns</button>'
+      +'<button class="mob-nav-btn" id="mnb-settings" onclick="showAppPage(\'settings\')">'
+      +'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button>'
+      +'</div>';
+    document.body.appendChild(nav);
+  }
+  ['dashboard','invest','returns','settings'].forEach(function(p){
+    var btn=document.getElementById('mnb-'+p);
+    if(btn)btn.classList.toggle('active',p===activePage);
+  });
+}
 function renderSidebars(){
   ['invest','dashboard','returns','settings'].forEach(function(p){buildSidebar(currentAppPage,'sidebar-'+p);});
   ['invest','dashboard','returns'].forEach(function(p){buildTicker('ticker-'+p);});
+  buildMobileNav(currentAppPage);
 }
 function showSettingsTab(btn,tab){
   document.querySelectorAll('.settings-nav-item').forEach(function(b){b.classList.remove('active');});
