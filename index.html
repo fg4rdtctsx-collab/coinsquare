@@ -2044,6 +2044,39 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
   </div>
 </div>
 
+<!-- Withdrawal Request Modal -->
+<div class="deposit-overlay" id="withdrawal-overlay" onclick="if(event.target===this)closeWithdrawalModal()" style="z-index:9999;">
+  <div class="deposit-modal" style="max-width:460px;">
+    <div class="deposit-modal-head" style="padding:20px 24px 16px;">
+      <div>
+        <div class="deposit-modal-title">Request Withdrawal</div>
+        <div class="deposit-modal-sub">Enter the wallet address you want your returns sent to.</div>
+      </div>
+      <button class="deposit-modal-close" onclick="closeWithdrawalModal()">✕</button>
+    </div>
+    <div style="padding:0 24px 8px;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Network</div>
+      <select id="wd-network" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px;border-radius:9px;font-family:'Sora',sans-serif;font-size:13px;outline:none;margin-bottom:14px;">
+        <option value="BTC">Bitcoin (BTC)</option>
+        <option value="ETH">Ethereum (ETH) — ERC-20</option>
+        <option value="USDT_TRC20">Tether USDT — TRC-20</option>
+        <option value="USDT_BEP20">Tether USDT — BEP-20</option>
+        <option value="SOL">Solana (SOL)</option>
+        <option value="XRP">XRP (Ripple)</option>
+        <option value="USDC">USD Coin (USDC)</option>
+        <option value="LTC">Litecoin (LTC)</option>
+      </select>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Wallet Address</div>
+      <input id="wd-address" type="text" placeholder="Paste your wallet address" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px;border-radius:9px;font-family:'Sora',sans-serif;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px;">
+      <div id="wd-err" style="font-size:12px;color:rgba(255,90,90,0.9);display:none;margin-bottom:8px;"></div>
+      <div id="wd-ok" style="font-size:12px;color:rgba(0,230,118,0.9);display:none;margin-bottom:8px;"></div>
+    </div>
+    <div class="deposit-modal-footer" style="padding:16px 24px 24px;">
+      <button class="btn-sent" onclick="submitWithdrawalRequest()" style="background:linear-gradient(135deg,#00C853,#00E676);color:#000;">Submit Withdrawal Request →</button>
+    </div>
+  </div>
+</div>
+
 <!-- Supabase JS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -2680,7 +2713,7 @@ function populateApprovedDash(planLabel,crypto,invested,returnAmt){
   var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Credited to account';
   var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Returns have been released to your account.';
   var row=document.getElementById('dash-active-plans-row');
-  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Returns credited to your account</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Approved · Completed</div></div>';}
+  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Returns credited to your account</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Approved · Completed</div><button onclick="openWithdrawalModal('+returnAmt+')" style="margin-top:14px;width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↑ Request Withdrawal</button></div>';}
   var al=document.getElementById('dash-activity-list');
   if(al){al.innerHTML='<div class="activity-item"><div class="act-icon" style="background:rgba(0,230,118,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="act-info"><div class="act-title">Returns Credited</div><div class="act-sub">'+planLabel+' · '+crypto+' · '+fmtD(invested)+' invested</div></div><div class="act-right"><div class="act-amt" style="color:rgba(0,230,118,0.9);">+'+fmtD(profit)+'</div><div class="act-time">Approved</div></div></div>';}
   var fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
@@ -2777,8 +2810,42 @@ function confirmPaymentSent(){
   }
   tick();
   successCountdownInterval=setInterval(tick,1000);
-}
+  } // end if(false)
+} // end confirmPaymentSent
 
+var _wdAmount=0;
+function openWithdrawalModal(amount){
+  _wdAmount=amount||0;
+  var err=document.getElementById('wd-err');var ok=document.getElementById('wd-ok');
+  if(err)err.style.display='none';if(ok)ok.style.display='none';
+  var addr=document.getElementById('wd-address');if(addr)addr.value='';
+  document.getElementById('withdrawal-overlay').classList.add('open');
+}
+function closeWithdrawalModal(){
+  document.getElementById('withdrawal-overlay').classList.remove('open');
+}
+async function submitWithdrawalRequest(){
+  var net=(document.getElementById('wd-network').value||'').trim();
+  var addr=(document.getElementById('wd-address').value||'').trim();
+  var err=document.getElementById('wd-err');var ok=document.getElementById('wd-ok');
+  if(!addr){err.textContent='Please enter a wallet address.';err.style.display='block';ok.style.display='none';return;}
+  if(!currentUser||!supa){err.textContent='Please log in first.';err.style.display='block';return;}
+  err.style.display='none';ok.style.display='none';
+  var {error}=await supa.from('withdrawals').insert({
+    id:'wd_'+Date.now(),
+    user_id:currentUser.id||'',
+    user_name:currentUser.name||'',
+    user_email:currentUser.email||'',
+    amount:_wdAmount,
+    network:net,
+    wallet_address:addr,
+    status:'pending',
+    requested_at:new Date().toISOString()
+  });
+  if(error){err.textContent='Error: '+error.message;err.style.display='block';return;}
+  ok.textContent='✓ Withdrawal request submitted! Admin will process it shortly.';ok.style.display='block';
+  setTimeout(function(){closeWithdrawalModal();},2800);
+}
 function closeDepositModal(){
   document.getElementById('deposit-overlay').classList.remove('open');
   document.body.style.overflow='';
