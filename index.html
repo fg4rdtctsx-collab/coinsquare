@@ -1537,6 +1537,9 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
         </div>
       </div>
       <div class="app-content">
+        <div id="invest-active-warning" style="display:none;margin-bottom:18px;padding:14px 18px;background:rgba(255,150,0,0.1);border:1px solid rgba(255,150,0,0.35);border-radius:12px;color:rgba(255,180,50,0.95);font-size:13px;font-weight:600;font-family:inherit;">
+          ⚠ You already have an active investment plan. You cannot start a new plan until your current one is completed or withdrawn. Go back to your <span style="text-decoration:underline;cursor:pointer;" onclick="showAppPage('dashboard')">Dashboard</span>.
+        </div>
         <div class="invest-hero-bar">
           <div>
             <div class="ihb-greeting" id="invest-greeting">WELCOME BACK</div>
@@ -1645,8 +1648,8 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
             </div>
             <div class="dwb-right">
               <div class="dwb-stat"><div class="dwb-stat-label">Portfolio</div><div class="dwb-stat-val" id="dash-portfolio-val">$0</div></div>
-              <div class="dwb-stat"><div class="dwb-stat-label">Total Earned</div><div class="dwb-stat-val green" id="dash-earned-val">$0</div></div>
-              <div class="dwb-stat"><div class="dwb-stat-label">Active Plans</div><div class="dwb-stat-val blue" id="dash-active-count">1</div></div>
+              <div class="dwb-stat"><div class="dwb-stat-label">Total Earned</div><div class="dwb-stat-val green" id="dash-earned-val">$0.00</div></div>
+              <div class="dwb-stat"><div class="dwb-stat-label">Active Plans</div><div class="dwb-stat-val blue" id="dash-active-count">0</div></div>
             </div>
           </div>
           <div class="section-header" style="margin-bottom:12px;">
@@ -1886,6 +1889,9 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
 
     <!-- Main content (hidden when success) -->
     <div id="deposit-main-content">
+      <div id="dep-active-err" style="display:none;margin:0 0 14px;padding:12px 16px;background:rgba(255,80,80,0.1);border:1px solid rgba(255,80,80,0.3);border-radius:10px;color:rgba(255,100,100,0.95);font-size:13px;font-weight:600;font-family:inherit;">
+        ⚠ You already have an active investment plan. You cannot start a new one until your current plan is completed.
+      </div>
       <div class="deposit-modal-head">
         <div>
           <div class="deposit-modal-title">Complete Your Investment</div>
@@ -1900,10 +1906,8 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
           <div class="dsb-plan" id="dsb-plan-label">Personal Plan · 48-hr return</div>
           <div class="dsb-amounts">
             <span class="dsb-invest" id="dsb-invest">$2,000</span>
-            <span class="dsb-arrow">→</span>
-            <span class="dsb-return" id="dsb-return">$3,800</span>
           </div>
-          <div class="dsb-profit" id="dsb-profit">+$1,800 profit</div>
+          <div class="dsb-profit" id="dsb-profit" style="display:none;"></div>
         </div>
         <div style="text-align:right;">
           <div style="font-size:9px;font-weight:700;color:rgba(0,230,118,0.4);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Return window</div>
@@ -2027,7 +2031,7 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <div class="deposit-success-title">Payment Confirmed!</div>
-      <div class="deposit-success-sub" id="success-sub">Your <span id="sc-amount">$2,000</span> investment is now active. You'll receive <span id="sc-return" style="color:#00E676;">$3,800</span> within 48 hours.</div>
+      <div class="deposit-success-sub" id="success-sub">Your <span id="sc-amount">$2,000</span> investment is now active. Your returns will be credited within 48 hours.</div>
       <div class="deposit-success-timer">
         <div>
           <div class="dst-label">Your return will be credited</div>
@@ -2055,6 +2059,13 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
       <button class="deposit-modal-close" onclick="closeWithdrawalModal()">✕</button>
     </div>
     <div style="padding:0 24px 8px;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Withdrawal Amount</div>
+      <div style="position:relative;margin-bottom:14px;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;">$</span>
+        <input id="wd-amount-input" type="number" min="1" step="0.01" placeholder="0.00" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px 10px 26px;border-radius:9px;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+        <button onclick="(function(){var i=document.getElementById('wd-amount-input');if(i&&_wdAmount>0)i.value=_wdAmount.toFixed(2);})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(77,157,255,0.15);border:1px solid rgba(77,157,255,0.3);color:#4D9DFF;font-size:10px;font-weight:700;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'Sora',sans-serif;">MAX</button>
+      </div>
+      <div id="wd-avail" style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:-10px;margin-bottom:14px;">Available: <span id="wd-avail-val">—</span></div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Network</div>
       <select id="wd-network" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px;border-radius:9px;font-family:'Sora',sans-serif;font-size:13px;outline:none;margin-bottom:14px;">
         <option value="BTC">Bitcoin (BTC)</option>
@@ -2122,13 +2133,26 @@ function showAppPage(id){
   window.scrollTo(0,0);renderSidebars();
   if(id==='returns')syncReturnsState();
   if(id==='dashboard'||id==='returns')setTimeout(initCharts,80);
+  if(id==='invest'&&currentUser&&supa){
+    supa.from('deposits').select('id,status').eq('user_email',currentUser.email).in('status',['pending','processing','approved']).then(function(res){
+      var warn=document.getElementById('invest-active-warning');
+      if(!warn)return;
+      if(res.data&&res.data.length>0){
+        warn.style.display='block';
+        document.querySelectorAll('.tier-card,.plan-toggle,.btn-activate,.invest-tiers-wrap').forEach(function(e){e.style.pointerEvents='none';e.style.opacity='0.4';});
+      } else {
+        warn.style.display='none';
+        document.querySelectorAll('.tier-card,.plan-toggle,.btn-activate,.invest-tiers-wrap').forEach(function(e){e.style.pointerEvents='';e.style.opacity='';});
+      }
+    });
+  }
 }
 function buildSidebar(activePage,mountId){
   var el=document.getElementById(mountId);if(!el)return;
   var name=(currentUser&&currentUser.name)||'Investor';
   var firstName=name.split(' ')[0];
   var initials=name.split(' ').map(function(n){return n[0]||'';}).join('').substring(0,2).toUpperCase()||'CS';
-  el.innerHTML='<aside class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-name">coinsquare</div><div class="sidebar-logo-sub">A WonderFi Company</div></div><div class="sidebar-user"><div class="user-avatar">'+initials+'</div><div><div class="user-info-name">'+firstName+'</div><div class="user-status"><div class="status-dot"></div><div class="status-text">Active</div></div></div></div><div class="sidebar-nav"><div class="nav-section-label">Main</div><button class="sidebar-link '+(activePage==='dashboard'?'active':'')+'" onclick="showAppPage(\'dashboard\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</button><button class="sidebar-link '+(activePage==='invest'?'active':'')+'" onclick="showAppPage(\'invest\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Invest<span class="badge">New</span></button><button class="sidebar-link '+(activePage==='returns'?'active':'')+'" onclick="showAppPage(\'returns\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Returns'+(userHasInvestments?'<span class="badge green">+$1,800</span>':'')+' </button><div class="nav-section-label">Account</div><button class="sidebar-link '+(activePage==='settings'?'active':'')+'" onclick="showAppPage(\'settings\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button><button class="sidebar-link" onclick="showPage(\'home\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button></div><div class="sidebar-footer"><div class="sidebar-portfolio-mini"><div class="spm-label">Portfolio</div><div class="spm-val">'+(userHasInvestments?'$'+sidebarPortfolioVal:'$0.00')+'</div><div class="spm-change">'+(userHasInvestments?'↑ +$180 expected':'No active plans yet')+'</div></div><button class="btn-signout" onclick="signOut()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button></div></aside>';
+  el.innerHTML='<aside class="sidebar"><div class="sidebar-logo"><div class="sidebar-logo-name">coinsquare</div><div class="sidebar-logo-sub">A WonderFi Company</div></div><div class="sidebar-user"><div class="user-avatar">'+initials+'</div><div><div class="user-info-name">'+firstName+'</div><div class="user-status"><div class="status-dot"></div><div class="status-text">Active</div></div></div></div><div class="sidebar-nav"><div class="nav-section-label">Main</div><button class="sidebar-link '+(activePage==='dashboard'?'active':'')+'" onclick="showAppPage(\'dashboard\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</button><button class="sidebar-link '+(activePage==='invest'?'active':'')+'" onclick="showAppPage(\'invest\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Invest<span class="badge">New</span></button><button class="sidebar-link '+(activePage==='returns'?'active':'')+'" onclick="showAppPage(\'returns\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Returns'+(userHasInvestments?'<span class="badge green">Active</span>':'')+' </button><div class="nav-section-label">Account</div><button class="sidebar-link '+(activePage==='settings'?'active':'')+'" onclick="showAppPage(\'settings\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</button><button class="sidebar-link" onclick="showPage(\'home\')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home</button></div><div class="sidebar-footer"><div class="sidebar-portfolio-mini"><div class="spm-label">Portfolio</div><div class="spm-val">'+(userHasInvestments?'$'+sidebarPortfolioVal:'$0.00')+'</div><div class="spm-change">'+(userHasInvestments?'Active plan':'No active plans yet')+'</div></div><button class="btn-signout" onclick="signOut()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button></div></aside>';
 }
 function buildTicker(mountId){
   var el=document.getElementById(mountId);if(!el)return;
@@ -2177,7 +2201,7 @@ function initCharts(){
   var pctx=document.getElementById('portfolioChart');
   if(pctx&&!pctx._ci){pctx._ci=true;new Chart(pctx,{type:'line',data:{labels:Array(13).fill(''),datasets:[{data:[8200,8900,9100,8700,10200,10800,11400,10900,12100,11800,12400,12840,12840],borderColor:'rgba(0,140,255,0.8)',backgroundColor:'rgba(0,88,255,0.08)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}},animation:{duration:900}}});}
   var rctx=document.getElementById('returnsChart');
-  if(rctx&&!rctx._ci){rctx._ci=true;new Chart(rctx,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{data:[0,380,0,1800,0,180,0],backgroundColor:['rgba(0,230,118,0.05)','rgba(0,230,118,0.5)','rgba(0,230,118,0.05)','rgba(0,230,118,0.6)','rgba(0,230,118,0.05)','rgba(0,230,118,0.4)','rgba(0,230,118,0.05)'],borderColor:['rgba(255,255,255,0.05)','rgba(0,230,118,0.8)','rgba(255,255,255,0.05)','rgba(0,230,118,0.9)','rgba(255,255,255,0.05)','rgba(0,230,118,0.7)','rgba(255,255,255,0.05)'],borderWidth:1,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:11}},grid:{display:false}},y:{ticks:{color:'rgba(255,255,255,0.18)',font:{size:11},callback:function(v){return v>0?'$'+v:''}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}}}});}
+  if(rctx&&!rctx._ci){rctx._ci=true;new Chart(rctx,{type:'bar',data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],datasets:[{data:[0,0,0,0,0,0,0],backgroundColor:'rgba(0,230,118,0.08)',borderColor:'rgba(0,230,118,0.2)',borderWidth:1,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'rgba(255,255,255,0.2)',font:{size:11}},grid:{display:false}},y:{ticks:{color:'rgba(255,255,255,0.18)',font:{size:11},callback:function(v){return v>0?'$'+v:''}},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false},suggestedMax:10}}}});}
 }
 function setReturnFilter(btn){
   document.querySelectorAll('.rh-filter-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');
@@ -2237,9 +2261,11 @@ async function restoreSession(){
       if(deps&&deps.length>0){
         var d=deps[0];
         if(d.status==='pending'){
-          populateFundedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amt)||0);
+          populateFundedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
+        } else if(d.status==='processing'){
+          populateProcessingDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
         } else if(d.status==='approved'){
-          populateApprovedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amt)||0);
+          populateApprovedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
         } else if(d.status==='rejected'){
           populateCancelledDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0);
         } else {
@@ -2468,8 +2494,8 @@ function renderTiers(){
       '<div class="tier-badge">⏱ 48-hr return</div>'+
       '<div class="tier-invest-label">You invest</div>'+
       '<div class="tier-amount">$'+fmtN(tier.amountInvested)+'</div>'+
-      '<div class="tier-roi">+'+roi+'% ROI in 48h</div>'+
-      '<div class="tier-divider"><div class="tier-return-label">You receive</div><div class="tier-return-val">$'+fmtN(tier.returnAmount)+'</div><div class="tier-profit-val">+$'+fmtN(profit)+' profit</div></div>'+
+      '<div class="tier-divider"></div>'+
+      '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:#00E676;margin-top:4px;">↑ +'+roi+'% ROI in 48h</div>'+
       '</button>';
   }).join('');
 }
@@ -2492,7 +2518,7 @@ function updateConfirmBtn(){
   if(selectedTierId){
     var tier=ALL_TIERS.find(t=>t.id===selectedTierId);
     var profit=tier.returnAmount-tier.amountInvested;
-    if(summary) summary.innerHTML='Investing <span>$'+fmtN(tier.amountInvested)+'</span> → receive <span style="color:#00E676;">$'+fmtN(tier.returnAmount)+'</span> <span style="color:rgba(0,230,118,0.5);font-size:13px;">(+$'+fmtN(profit)+' profit)</span> within 48 hours.';
+    if(summary) summary.innerHTML='Investing <span>$'+fmtN(tier.amountInvested)+'</span> → returns released within 48 hours after confirmation.';
     btn.textContent='Confirm & Get Payment Address →';
     btn.classList.add('ready');
     hint.style.display='block';
@@ -2525,12 +2551,9 @@ function showDepositModal(){
   // Populate summary
   document.getElementById('dsb-plan-label').textContent=planLabel;
   document.getElementById('dsb-invest').textContent='$'+fmtN(tier.amountInvested);
-  document.getElementById('dsb-return').textContent='$'+fmtN(tier.returnAmount);
-  document.getElementById('dsb-profit').textContent='+$'+fmtN(profit)+' profit';
   document.getElementById('dah-amount').textContent='$'+fmtN(tier.amountInvested);
   document.getElementById('instr-amount').textContent='exactly $'+fmtN(tier.amountInvested);
   document.getElementById('sc-amount').textContent='$'+fmtN(tier.amountInvested);
-  document.getElementById('sc-return').textContent='$'+fmtN(tier.returnAmount);
   // Reset to BTC
   currentDepositCrypto='BTC';
   document.querySelectorAll('.crypto-tab').forEach(function(t){t.classList.remove('sel');});
@@ -2603,7 +2626,7 @@ function showDemoMode(){
   var ev=document.getElementById('dash-earned-val');if(ev)ev.textContent='$0.00';
   var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
   var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent='$200.00';
-  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='↑ +$180 expected in 48h';hc.style.color='rgba(0,230,118,0.7)';}
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='Investment active · Returns pending';hc.style.color='rgba(77,157,255,0.75)';}
   var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='$0.00';
   var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Credited after 48h';
   var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
@@ -2625,10 +2648,10 @@ function showDemoMode(){
   },1000);
   // Populate returns page for demo
   var rh=document.getElementById('returns-history-rows');
-  if(rh){rh.innerHTML='<div class="return-row"><div class="ret-icon-wrap" style="background:rgba(255,200,50,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFCC00" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div><div class="ret-plan">Group Plan · BTC</div><div class="ret-sub">Active · 47h 59m left</div></div><div><span class="ret-status pending">● Active</span></div><div class="ret-invested">$200</div><div class="ret-amount" style="color:#4D9DFF;">$380</div></div>';}
+  if(rh){rh.innerHTML='<div class="return-row"><div class="ret-icon-wrap" style="background:rgba(255,200,50,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFCC00" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div><div class="ret-plan">Group Plan · BTC</div><div class="ret-sub">Active · 47h 59m left</div></div><div><span class="ret-status pending">● Active</span></div><div class="ret-invested">$200</div><div class="ret-amount" style="color:rgba(77,157,255,0.5);">——</div></div>';}
   var rth=document.getElementById('returns-total-heading');if(rth)rth.innerHTML='$0.00 <span style="font-size:16px;color:rgba(255,255,255,0.3);font-weight:700;">total earned (pending)</span>';
   var rsp=document.getElementById('returns-stat-profit');if(rsp)rsp.textContent='$0.00';
-  var rsr=document.getElementById('returns-stat-roi');if(rsr){rsr.textContent='↑ +$180 expected';rsr.style.color='rgba(0,230,118,0.5)';}
+  var rsr=document.getElementById('returns-stat-roi');if(rsr){rsr.textContent='Pending';rsr.style.color='rgba(255,200,50,0.5)';}
   var rspn=document.getElementById('returns-stat-plans');if(rspn)rspn.textContent='0';
   var rsi=document.getElementById('returns-stat-invested');if(rsi)rsi.textContent='$200';
   syncReturnsState();
@@ -2643,6 +2666,25 @@ function exitDemoMode(){
   if(fs)fs.style.display='none';
   if(db)db.style.display='none';
   renderSidebars();
+}
+function populateProcessingDash(planLabel,crypto,invested,returnAmt){
+  var profit=returnAmt-invested;
+  userHasInvestments=true;
+  sidebarPortfolioVal=fmtD2(invested);
+  renderSidebars();
+  var ev=document.getElementById('dash-earned-val');if(ev){ev.textContent='——';ev.closest('.dwb-stat').querySelector('.dwb-stat-label').textContent='Total Earned';}
+  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='Investment active · Returns pending';hc.style.color='rgba(77,157,255,0.8)';}
+  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='——';
+  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Pending';
+  var qsLabel=document.querySelector('#dash-qs-earned')?.closest('.qs-card')?.querySelector('.qs-label');if(qsLabel)qsLabel.textContent='Total Earned';
+  var pc=document.getElementById('dash-portfolio-val');if(pc)pc.textContent=fmtD(invested);
+  var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Payment confirmed — your investment is active.';
+  var row=document.getElementById('dash-active-plans-row');
+  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(77,157,255,0.6);">——</span></div><div class="apc-timer" style="color:rgba(77,157,255,0.75);">⏳ Investment active · Awaiting release</div><div class="apc-status"><div class="apc-dot" style="background:#4D9DFF;animation:pulse 1.5s infinite;"></div>Processing · Returns pending</div></div>';}
+  var rsp2=document.getElementById('returns-stat-profit');if(rsp2)rsp2.textContent='——';
+  var rsr2=document.getElementById('returns-stat-roi');if(rsr2){rsr2.textContent='Returns pending';rsr2.style.color='rgba(77,157,255,0.6)';}
+  chartsInited=false;initCharts();
 }
 function populateFundedDash(planLabel,crypto,invested,returnAmt){
   userHasInvestments=true;
@@ -2662,28 +2704,30 @@ function populateFundedDash(planLabel,crypto,invested,returnAmt){
   if(currentUser){var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;}
   var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
   var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(invested);
-  var ev=document.getElementById('dash-earned-val');if(ev)ev.textContent='$0.00';
+  var ev=document.getElementById('dash-earned-val');
+  if(ev){ev.textContent='——';var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
   var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
   var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=fmtD(invested);
-  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='↑ +'+fmtD(returnAmt-invested)+' expected in 48h';hc.style.color='rgba(0,230,118,0.7)';}
-  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='$0.00';
-  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Credited after 48h';
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='Awaiting payment confirmation';hc.style.color='rgba(255,200,50,0.75)';}
+  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='——';
+  var qlbl=document.querySelector('.qs-card .qs-label');if(qlbl)qlbl.textContent='Total Earned';
+  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Pending';
   var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
   var qps=document.getElementById('dash-qs-plans-sub');if(qps)qps.textContent='Pending confirmation';
-  var qr=document.getElementById('dash-qs-return');if(qr)qr.textContent=fmtD(returnAmt);
-  var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='In ~48 hours';
+  var qr=document.getElementById('dash-qs-return');if(qr)qr.textContent='——';
+  var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Pending';
   var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Payment submitted — awaiting confirmation.';
   var row=document.getElementById('dash-active-plans-row');
-  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(255,200,50,0.75);">⏳ Awaiting payment confirmation</div><div class="apc-status"><div class="apc-dot" style="background:#FFCC00;animation:pulse 1.5s infinite;"></div>Pending · Under review</div></div>';}
+  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(255,200,50,0.5);">——</span></div><div class="apc-timer" style="color:rgba(255,200,50,0.75);">⏳ Awaiting payment confirmation</div><div class="apc-status"><div class="apc-dot" style="background:#FFCC00;animation:pulse 1.5s infinite;"></div>Pending · Under review</div></div>';}
   var al=document.getElementById('dash-activity-list');
   if(al){al.innerHTML='<div class="activity-item"><div class="act-icon" style="background:rgba(255,200,50,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFCC00" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div class="act-info"><div class="act-title">Payment Submitted</div><div class="act-sub">'+planLabel+' · '+crypto+' · '+fmtD(invested)+'</div></div><div class="act-right"><div class="act-amt" style="color:rgba(255,200,50,0.8);">Pending</div><div class="act-time">Just now</div></div></div>';}
   // Populate returns page for real investment
   var fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
   var rh2=document.getElementById('returns-history-rows');
-  if(rh2){rh2.innerHTML='<div class="return-row"><div class="ret-icon-wrap" style="background:rgba(255,200,50,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFCC00" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div><div class="ret-plan">'+planLabel+' · '+crypto+'</div><div class="ret-sub">Awaiting payment confirmation</div></div><div><span class="ret-status pending">● Pending</span></div><div class="ret-invested">'+fmtD2(invested)+'</div><div class="ret-amount" style="color:#4D9DFF;">'+fmtD2(returnAmt)+'</div></div>';}
+  if(rh2){rh2.innerHTML='<div class="return-row"><div class="ret-icon-wrap" style="background:rgba(255,200,50,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFCC00" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg></div><div><div class="ret-plan">'+planLabel+' · '+crypto+'</div><div class="ret-sub">Awaiting payment confirmation</div></div><div><span class="ret-status pending">● Pending</span></div><div class="ret-invested">'+fmtD2(invested)+'</div><div class="ret-amount" style="color:rgba(255,200,50,0.5);">——</div></div>';}
   var rth2=document.getElementById('returns-total-heading');if(rth2)rth2.innerHTML='$0.00 <span style="font-size:16px;color:rgba(255,255,255,0.3);font-weight:700;">total earned (pending)</span>';
   var rsp2=document.getElementById('returns-stat-profit');if(rsp2)rsp2.textContent='$0.00';
-  var rsr2=document.getElementById('returns-stat-roi');if(rsr2){rsr2.textContent='↑ +'+fmtD2(returnAmt-invested)+' expected';rsr2.style.color='rgba(0,230,118,0.5)';}
+  var rsr2=document.getElementById('returns-stat-roi');if(rsr2){rsr2.textContent='Pending';rsr2.style.color='rgba(255,200,50,0.5)';}
   var rspn2=document.getElementById('returns-stat-plans');if(rspn2)rspn2.textContent='0';
   var rsi2=document.getElementById('returns-stat-invested');if(rsi2)rsi2.textContent=fmtD2(invested);
   syncReturnsState();
@@ -2691,7 +2735,7 @@ function populateFundedDash(planLabel,crypto,invested,returnAmt){
 }
 function populateApprovedDash(planLabel,crypto,invested,returnAmt){
   userHasInvestments=true;
-  sidebarPortfolioVal=returnAmt>=1000?returnAmt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):returnAmt.toFixed(2);
+  sidebarPortfolioVal=invested>=1000?invested.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):invested.toFixed(2);
   saveSession();renderSidebars();
   var es=document.getElementById('dash-empty-state');var fs=document.getElementById('dash-funded-state');var db=document.getElementById('dash-demo-bar');
   if(es)es.style.display='none';if(fs)fs.style.display='block';if(db)db.style.display='none';
@@ -2700,20 +2744,22 @@ function populateApprovedDash(planLabel,crypto,invested,returnAmt){
   if(currentUser){var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;}
   var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
   var profit=returnAmt-invested;
-  var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(returnAmt);
-  var ev=document.getElementById('dash-earned-val');if(ev)ev.textContent=fmtD(profit);
-  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
+  var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(invested);
+  var ev=document.getElementById('dash-earned-val');
+  if(ev){ev.textContent=fmtD(profit);var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
+  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='0';
   var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=fmtD(returnAmt);
-  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='↑ +'+fmtD(profit)+' profit credited';hc.style.color='rgba(0,230,118,0.9)';}
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='↑ +'+fmtD(profit)+' profit included';hc.style.color='rgba(0,230,118,0.8)';}
   var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent=fmtD(profit);
-  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Returns released';
+  var qlbl2=document.querySelector('.qs-card .qs-label');if(qlbl2)qlbl2.textContent='Total Earned';
+  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Returns credited';
   var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
   var qps=document.getElementById('dash-qs-plans-sub');if(qps)qps.textContent='Completed';
   var qr=document.getElementById('dash-qs-return');if(qr)qr.textContent=fmtD(returnAmt);
   var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Credited to account';
-  var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Returns have been released to your account.';
+  var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Your investment has been completed.';
   var row=document.getElementById('dash-active-plans-row');
-  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Returns credited to your account</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Approved · Completed</div><button onclick="openWithdrawalModal('+returnAmt+')" style="margin-top:14px;width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↑ Request Withdrawal</button></div>';}
+  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Investment completed</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Completed · Withdraw available</div><button onclick="openWithdrawalModal('+returnAmt+')" style="margin-top:14px;width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↑ Request Withdrawal</button></div>';}
   var al=document.getElementById('dash-activity-list');
   if(al){al.innerHTML='<div class="activity-item"><div class="act-icon" style="background:rgba(0,230,118,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="act-info"><div class="act-title">Returns Credited</div><div class="act-sub">'+planLabel+' · '+crypto+' · '+fmtD(invested)+' invested</div></div><div class="act-right"><div class="act-amt" style="color:rgba(0,230,118,0.9);">+'+fmtD(profit)+'</div><div class="act-time">Approved</div></div></div>';}
   var fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
@@ -2762,7 +2808,17 @@ function populateCancelledDash(planLabel,crypto,invested){
   var rsi2=document.getElementById('returns-stat-invested');if(rsi2)rsi2.textContent=fmtD2(invested);
   syncReturnsState();chartsInited=false;initCharts();
 }
-function confirmPaymentSent(){
+async function confirmPaymentSent(){
+  // Block if user already has an active plan
+  if(currentUser&&supa){
+    var {data:existing}=await supa.from('deposits').select('id,status').eq('user_email',currentUser.email).in('status',['pending','processing','approved']);
+    if(existing&&existing.length>0){
+      var errEl=document.getElementById('dep-active-err');
+      if(errEl){errEl.style.display='block';}
+      else{alert('You already have an active investment plan. You cannot start a new one until your current plan is completed or cancelled.');}
+      return;
+    }
+  }
   if(selectedTierId&&currentUser&&supa){
     var _tier=ALL_TIERS.find(function(t){return t.id===selectedTierId;});
     if(_tier){
@@ -2819,6 +2875,10 @@ function openWithdrawalModal(amount){
   var err=document.getElementById('wd-err');var ok=document.getElementById('wd-ok');
   if(err)err.style.display='none';if(ok)ok.style.display='none';
   var addr=document.getElementById('wd-address');if(addr)addr.value='';
+  var amtInp=document.getElementById('wd-amount-input');if(amtInp)amtInp.value='';
+  var avail=document.getElementById('wd-avail-val');
+  if(avail&&_wdAmount>0)avail.textContent='$'+(_wdAmount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
+  else if(avail)avail.textContent='—';
   document.getElementById('withdrawal-overlay').classList.add('open');
 }
 function closeWithdrawalModal(){
@@ -2827,7 +2887,10 @@ function closeWithdrawalModal(){
 async function submitWithdrawalRequest(){
   var net=(document.getElementById('wd-network').value||'').trim();
   var addr=(document.getElementById('wd-address').value||'').trim();
+  var amtRaw=parseFloat((document.getElementById('wd-amount-input').value||'').trim());
   var err=document.getElementById('wd-err');var ok=document.getElementById('wd-ok');
+  if(!amtRaw||amtRaw<=0){err.textContent='Please enter a withdrawal amount.';err.style.display='block';ok.style.display='none';return;}
+  if(_wdAmount>0&&amtRaw>_wdAmount){err.textContent='Amount exceeds available balance ($'+_wdAmount.toFixed(2)+').';err.style.display='block';ok.style.display='none';return;}
   if(!addr){err.textContent='Please enter a wallet address.';err.style.display='block';ok.style.display='none';return;}
   if(!currentUser||!supa){err.textContent='Please log in first.';err.style.display='block';return;}
   err.style.display='none';ok.style.display='none';
@@ -2836,7 +2899,7 @@ async function submitWithdrawalRequest(){
     user_id:currentUser.id||'',
     user_name:currentUser.name||'',
     user_email:currentUser.email||'',
-    amount:_wdAmount,
+    amount:amtRaw,
     network:net,
     wallet_address:addr,
     status:'pending',
