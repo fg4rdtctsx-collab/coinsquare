@@ -1317,6 +1317,8 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
 <!-- ═══════ SHARED APP SHELL ═══════ -->
 <style>
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+@keyframes celebIn{from{opacity:0;transform:scale(0.92) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+@keyframes celebBounce{0%{transform:scale(0.5);opacity:0;}60%{transform:scale(1.2);}80%{transform:scale(0.95);}100%{transform:scale(1);opacity:1;}}
 .app-content{animation:fadeUp 0.3s ease;}
 .app-shell{display:flex;min-height:100vh;background:#070810;font-family:'DM Sans',sans-serif;}
 .sidebar{width:232px;min-width:232px;background:rgba(255,255,255,0.02);border-right:1px solid rgba(255,255,255,0.05);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden;z-index:50;}
@@ -1741,6 +1743,23 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
             </div>
             <div id="returns-history-rows"></div>
           </div>
+          <!-- ── WITHDRAWAL HISTORY ── -->
+          <div class="returns-history" id="wd-history-section" style="margin-top:20px;display:none;">
+            <div class="rh-head"><div class="rh-title">Withdrawal History</div></div>
+            <div class="return-row" style="font-size:9px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.18);padding:9px 22px;border-bottom:1px solid rgba(255,255,255,0.05);">
+              <div></div><div>Date</div><div>Status</div><div>Network</div><div>Amount</div>
+            </div>
+            <div id="wd-history-rows"></div>
+          </div>
+          <!-- ── AVAILABLE BALANCE STRIP ── -->
+          <div id="wd-avail-strip" style="display:none;margin-top:20px;background:rgba(0,230,118,0.05);border:1px solid rgba(0,230,118,0.15);border-radius:14px;padding:16px 20px;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(0,230,118,0.6);margin-bottom:4px;">Available to Withdraw</div>
+              <div style="font-size:22px;font-weight:900;color:#00E676;font-family:'Sora',sans-serif;" id="avail-strip-val">$0.00</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;" id="avail-strip-sub">After pending withdrawals</div>
+            </div>
+            <button onclick="openWithdrawalModal()" style="padding:12px 22px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:'Sora',sans-serif;">↑ Withdraw</button>
+          </div>
         </div>
       </div>
     </div>
@@ -2065,7 +2084,8 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
         <input id="wd-amount-input" type="number" min="1" step="0.01" placeholder="0.00" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px 10px 26px;border-radius:9px;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
         <button onclick="(function(){var i=document.getElementById('wd-amount-input');if(i&&_wdAmount>0)i.value=_wdAmount.toFixed(2);})()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(77,157,255,0.15);border:1px solid rgba(77,157,255,0.3);color:#4D9DFF;font-size:10px;font-weight:700;border-radius:6px;padding:3px 8px;cursor:pointer;font-family:'Sora',sans-serif;">MAX</button>
       </div>
-      <div id="wd-avail" style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:-10px;margin-bottom:14px;">Available: <span id="wd-avail-val">—</span></div>
+      <div id="wd-avail" style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:-10px;margin-bottom:6px;">Available: <span id="wd-avail-val">—</span></div>
+      <div id="wd-partial-note" style="display:none;font-size:11px;color:rgba(77,157,255,0.75);background:rgba(77,157,255,0.07);border:1px solid rgba(77,157,255,0.18);border-radius:8px;padding:8px 12px;margin-bottom:14px;">You can withdraw any amount up to your available balance — all at once or bit by bit.</div>
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Network</div>
       <select id="wd-network" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px;border-radius:9px;font-family:'Sora',sans-serif;font-size:13px;outline:none;margin-bottom:14px;">
         <option value="BTC">Bitcoin (BTC)</option>
@@ -2084,6 +2104,41 @@ footer{background:#0A0A0A;color:#fff;padding:60px 32px 28px;}
     </div>
     <div class="deposit-modal-footer" style="padding:16px 24px 24px;">
       <button class="btn-sent" onclick="submitWithdrawalRequest()" style="background:linear-gradient(135deg,#00C853,#00E676);color:#000;">Submit Withdrawal Request →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Funds Modal -->
+<div class="deposit-overlay" id="addfunds-overlay" onclick="if(event.target===this)closeAddFundsModal()" style="z-index:9999;">
+  <div class="deposit-modal" style="max-width:460px;">
+    <div class="deposit-modal-head" style="padding:20px 24px 16px;">
+      <div>
+        <div class="deposit-modal-title">Add Funds</div>
+        <div class="deposit-modal-sub">Upload proof of your top-up payment. Admin will confirm and add it to your total.</div>
+      </div>
+      <button class="deposit-modal-close" onclick="closeAddFundsModal()">✕</button>
+    </div>
+    <div style="padding:0 24px 8px;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Amount You Are Adding ($)</div>
+      <div style="position:relative;margin-bottom:14px;">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.5);font-size:14px;font-weight:700;">$</span>
+        <input id="af-amount" type="number" min="100" step="1" placeholder="100" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#fff;padding:10px 12px 10px 26px;border-radius:9px;font-family:'Sora',sans-serif;font-size:14px;font-weight:700;outline:none;box-sizing:border-box;">
+      </div>
+      <div id="af-remaining" style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:-10px;margin-bottom:14px;"></div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Payment Screenshot</div>
+      <div id="af-ss-wrap" style="border:1.5px dashed rgba(255,255,255,0.12);border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-bottom:6px;" onclick="document.getElementById('af-ss-input').click()">
+        <input type="file" id="af-ss-input" accept="image/*" style="display:none;" onchange="handleAfSSUpload(this)">
+        <div id="af-ss-placeholder" style="color:rgba(255,255,255,0.25);font-size:13px;">📎 Tap to upload payment screenshot</div>
+        <div id="af-ss-preview" style="display:none;position:relative;display:inline-block;">
+          <img id="af-ss-img" src="" alt="Screenshot" style="max-width:100%;max-height:130px;border-radius:8px;object-fit:contain;"/>
+          <button onclick="clearAfSS(event)" style="position:absolute;top:-4px;right:-4px;background:rgba(7,8,16,0.9);border:1px solid rgba(255,255,255,0.15);border-radius:50%;width:22px;height:22px;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;line-height:20px;text-align:center;">✕</button>
+        </div>
+      </div>
+      <div id="af-err" style="font-size:12px;color:rgba(255,90,90,0.9);display:none;margin-bottom:8px;"></div>
+      <div id="af-ok" style="font-size:12px;color:rgba(0,230,118,0.9);display:none;margin-bottom:8px;"></div>
+    </div>
+    <div class="deposit-modal-footer" style="padding:16px 24px 24px;">
+      <button class="btn-sent" onclick="submitAddFunds()" style="background:linear-gradient(135deg,#0058FF,#4D9DFF);color:#fff;">Submit Top-up →</button>
     </div>
   </div>
 </div>
@@ -2119,12 +2174,103 @@ function toggleFaq(btn){
   if(!isOpen){ans.classList.add('open');btn.querySelector('.faq-chevron').textContent='▴';}
 }
 var currentAppPage='dashboard';
-function syncReturnsState(){
+async function syncReturnsState(){
   var re=document.getElementById('returns-empty-state');
   var rf=document.getElementById('returns-funded-state');
   if(!re||!rf)return;
-  if(userHasInvestments){re.style.display='none';rf.style.display='block';}
-  else{re.style.display='block';rf.style.display='none';}
+  if(!userHasInvestments||!_allUserDeps.length){re.style.display='block';rf.style.display='none';return;}
+  re.style.display='none';rf.style.display='block';
+  var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+  var fmtDate=function(s){if(!s)return '——';var d=new Date(s);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});};
+  var approvedDeps=_allUserDeps.filter(function(d){return d.status==='approved';});
+  var totalReturn=approvedDeps.reduce(function(s,d){return s+(parseFloat(d.return_amount)||0);},0);
+  var totalEarned=approvedDeps.reduce(function(s,d){return s+Math.max(0,(parseFloat(d.return_amount)||0)-(parseFloat(d.invested)||0));},0);
+  var totalInvested=_allUserDeps.filter(function(d){return d.status!=='rejected';}).reduce(function(s,d){return s+(parseFloat(d.invested)||0);},0);
+  // Fetch withdrawal history
+  var userWithdrawals=[];
+  if(supa&&currentUser&&currentUser.email){
+    var {data:wds}=await supa.from('withdrawals').select('*').eq('user_email',currentUser.email).order('requested_at',{ascending:false});
+    userWithdrawals=wds||[];
+  }
+  // Compute available balance = total return - sum of non-rejected withdrawals
+  var alreadyWithdrawn=userWithdrawals.filter(function(w){return w.status==='approved'||w.status==='pending';}).reduce(function(s,w){return s+(parseFloat(w.amount)||0);},0);
+  _totalAvailableWithdraw=Math.max(0,totalReturn-alreadyWithdrawn);
+  // Update header stats
+  var rth=document.getElementById('returns-total-heading');
+  if(rth)rth.innerHTML=(totalEarned>0?fmtD(totalEarned):'$0.00')+' <span style="font-size:16px;color:rgba(0,230,118,0.7);font-weight:700;">total earned</span>';
+  var rsp=document.getElementById('returns-stat-profit');if(rsp)rsp.textContent=totalEarned>0?fmtD(totalEarned):'$0.00';
+  var rsr=document.getElementById('returns-stat-roi');
+  if(rsr){if(totalEarned>0){rsr.textContent='↑ +'+fmtD(totalEarned)+' credited';rsr.style.color='rgba(0,230,118,0.9)';}else{rsr.textContent='Returns pending';rsr.style.color='rgba(77,157,255,0.6)';}}
+  var rspn=document.getElementById('returns-stat-plans');if(rspn)rspn.textContent=String(approvedDeps.length);
+  var rsi=document.getElementById('returns-stat-invested');if(rsi)rsi.textContent=fmtD(totalInvested);
+  // Build return history rows
+  var rh=document.getElementById('returns-history-rows');
+  if(rh){
+    var rows='';
+    approvedDeps.forEach(function(dep){
+      var inv=parseFloat(dep.invested)||0;
+      var ret=parseFloat(dep.return_amount)||0;
+      rows+='<div class="return-row">'
+        +'<div class="ret-icon-wrap" style="background:rgba(0,230,118,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div>'
+        +'<div><div class="ret-plan">'+(dep.plan_label||'Plan')+' · '+(dep.crypto||'BTC')+'</div><div class="ret-sub">Returns released by admin</div></div>'
+        +'<div><span class="ret-status" style="color:rgba(0,230,118,0.9);background:rgba(0,230,118,0.08);padding:3px 8px;border-radius:12px;font-size:11px;">● Completed</span></div>'
+        +'<div class="ret-invested">'+fmtD(inv)+'</div>'
+        +'<div class="ret-amount" style="color:rgba(0,230,118,0.9);">'+(ret>0?fmtD(ret):'——')+'</div>'
+        +'</div>';
+    });
+    _allUserDeps.filter(function(d){return d.status==='processing'||d.status==='started'||d.status==='contributing'||d.status==='pending';}).forEach(function(dep){
+      var inv=parseFloat(dep.invested)||0;
+      var statusLabel=dep.status==='processing'?'Active':dep.status==='started'?'Started':dep.status==='contributing'?'Contributing':'Pending';
+      var statusColor=dep.status==='processing'?'#4D9DFF':dep.status==='started'?'#B06AFF':dep.status==='contributing'?'#FFA500':'#FFD700';
+      rows+='<div class="return-row">'
+        +'<div class="ret-icon-wrap" style="background:rgba(77,157,255,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4D9DFF" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>'
+        +'<div><div class="ret-plan">'+(dep.plan_label||'Plan')+' · '+(dep.crypto||'BTC')+'</div><div class="ret-sub">Investment in progress</div></div>'
+        +'<div><span class="ret-status" style="color:'+statusColor+';background:rgba(77,157,255,0.06);padding:3px 8px;border-radius:12px;font-size:11px;">● '+statusLabel+'</span></div>'
+        +'<div class="ret-invested">'+fmtD(inv)+'</div>'
+        +'<div class="ret-amount" style="color:rgba(255,255,255,0.3);">——</div>'
+        +'</div>';
+    });
+    if(!rows)rows='<div style="text-align:center;padding:30px;color:rgba(255,255,255,0.25);font-size:13px;">No investments yet.</div>';
+    rh.innerHTML=rows;
+  }
+  // Show available balance strip if user has returns
+  var strip=document.getElementById('wd-avail-strip');
+  var stripVal=document.getElementById('avail-strip-val');
+  var stripSub=document.getElementById('avail-strip-sub');
+  if(strip&&approvedDeps.length>0){
+    strip.style.display='flex';
+    if(stripVal)stripVal.textContent=fmtD(_totalAvailableWithdraw);
+    if(stripSub){
+      if(alreadyWithdrawn>0)stripSub.textContent=fmtD(alreadyWithdrawn)+' already withdrawn';
+      else stripSub.textContent='Full balance available';
+    }
+  } else if(strip){strip.style.display='none';}
+  // Build withdrawal history rows
+  var wdSec=document.getElementById('wd-history-section');
+  var wdRows=document.getElementById('wd-history-rows');
+  if(wdSec&&wdRows){
+    if(userWithdrawals.length>0){
+      wdSec.style.display='block';
+      var wRows='';
+      userWithdrawals.forEach(function(w){
+        var _isCxl=w.status==='cancelled'||w.status==='canceled'||w.status==='rejected';
+        var statusColor=w.status==='approved'?'rgba(0,230,118,0.9)':_isCxl?'rgba(180,180,180,0.8)':'rgba(255,200,50,0.9)';
+        var statusLabel=w.status==='approved'?'Paid':_isCxl?'Canceled':'Processing';
+        var iconColor=w.status==='approved'?'#00E676':_isCxl?'#AAAAAA':'#FFCC00';
+        var iconBg=w.status==='approved'?'rgba(0,230,118,0.08)':_isCxl?'rgba(180,180,180,0.06)':'rgba(255,200,50,0.08)';
+        wRows+='<div class="return-row">'
+          +'<div class="ret-icon-wrap" style="background:'+iconBg+';"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+iconColor+'" stroke-width="2"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></div>'
+          +'<div><div class="ret-plan">Withdrawal Request</div><div class="ret-sub">'+(w.network||'—')+' · '+(w.wallet_address?w.wallet_address.slice(0,14)+'…':'—')+'</div></div>'
+          +'<div><span class="ret-status" style="color:'+statusColor+';background:'+iconBg+';padding:3px 8px;border-radius:12px;font-size:11px;">● '+statusLabel+'</span></div>'
+          +'<div class="ret-invested" style="color:rgba(255,255,255,0.4);font-size:11px;">'+fmtDate(w.requested_at)+'</div>'
+          +'<div class="ret-amount" style="color:'+statusColor+';">'+fmtD(parseFloat(w.amount)||0)+'</div>'
+          +'</div>';
+      });
+      wdRows.innerHTML=wRows;
+    } else {
+      wdSec.style.display='none';
+    }
+  }
 }
 function showAppPage(id){
   currentAppPage=id;
@@ -2134,10 +2280,17 @@ function showAppPage(id){
   if(id==='returns')syncReturnsState();
   if(id==='dashboard'||id==='returns')setTimeout(initCharts,80);
   if(id==='invest'&&currentUser&&supa){
-    supa.from('deposits').select('id,status').eq('user_email',currentUser.email).in('status',['pending','processing','approved']).then(function(res){
+    supa.from('deposits').select('id,status,deposit_type').eq('user_email',currentUser.email).then(function(res){
       var warn=document.getElementById('invest-active-warning');
       if(!warn)return;
-      if(res.data&&res.data.length>0){
+      var deps=res.data||[];
+      // Block only if: single plan is pending/processing, OR any plan is 'started'
+      var blocked=deps.some(function(d){
+        if(d.status==='started')return true;
+        if(d.deposit_type!=='installment'&&(d.status==='pending'||d.status==='processing'))return true;
+        return false;
+      });
+      if(blocked){
         warn.style.display='block';
         document.querySelectorAll('.tier-card,.plan-toggle,.btn-activate,.invest-tiers-wrap').forEach(function(e){e.style.pointerEvents='none';e.style.opacity='0.4';});
       } else {
@@ -2223,6 +2376,20 @@ function saveProfile(){
 var currentUser=null;
 var userHasInvestments=false;
 var sidebarPortfolioVal='0.00';
+var _allUserDeps=[];
+var _totalAvailableWithdraw=0;
+function applyAggregateStats(allDeps){
+  var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+  var totalPortfolio=allDeps.filter(function(d){return d.status!=='rejected';}).reduce(function(s,d){return s+(parseFloat(d.invested)||0);},0);
+  var totalEarned=allDeps.filter(function(d){return d.status==='approved';}).reduce(function(s,d){return s+Math.max(0,(parseFloat(d.return_amount)||0)-(parseFloat(d.invested)||0));},0);
+  var activePlans=allDeps.filter(function(d){return d.status==='pending'||d.status==='processing'||d.status==='contributing'||d.status==='started';}).length;
+  var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=totalPortfolio>0?fmtD(totalPortfolio):'$0.00';
+  var ev=document.getElementById('dash-earned-val');
+  if(ev){ev.textContent=totalEarned>0?fmtD(totalEarned):'——';var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
+  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent=String(activePlans);
+  sidebarPortfolioVal=totalPortfolio>=1000?totalPortfolio.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):totalPortfolio.toFixed(2);
+  renderSidebars();
+}
 
 function saveSession(){
   try{localStorage.setItem('csq_sess',JSON.stringify({user:currentUser,page:currentAppPage,inv:userHasInvestments,port:sidebarPortfolioVal}));}catch(e){}
@@ -2238,6 +2405,8 @@ function signOut(){
 }
 async function restoreSession(){
   try{
+    // Ensure Supabase client is ready (CDN may still be initialising)
+    if(!supa&&window.supabase){try{supa=window.supabase.createClient(_SB_URL,_SB_KEY);}catch(e){}}
     var raw=localStorage.getItem('csq_sess');if(!raw)return;
     var s=JSON.parse(raw);if(!s||!s.user||!s.user.email)return;
     currentUser=s.user;
@@ -2256,11 +2425,29 @@ async function restoreSession(){
     var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;
     chartsInited=false;renderTiers();renderSidebars();
     if(supa&&currentUser.email){
-      var {data:deps}=await supa.from('deposits').select('*').eq('user_email',currentUser.email).order('submitted_at',{ascending:false}).limit(1);
-      if(deps&&deps.length>0){
-        var d=deps[0];
+      var {data:allDeps}=await supa.from('deposits').select('*').eq('user_email',currentUser.email).order('submitted_at',{ascending:false});
+      allDeps=allDeps||[];
+      // Priority: approved (has profits to withdraw) > processing > started > contributing > pending > rejected
+      var _prioList=['approved','processing','started','contributing','pending','rejected'];
+      var primaryDep=null;
+      for(var _pi=0;_pi<_prioList.length;_pi++){
+        var _ps=_prioList[_pi];
+        var _pd=allDeps.find(function(x){return x.status===_ps;});
+        if(_pd){primaryDep=_pd;break;}
+      }
+      _allUserDeps=allDeps;
+      if(allDeps.length>0&&primaryDep){
+        var d=primaryDep;
         if(d.status==='pending'){
-          populateFundedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
+          if(d.deposit_type==='installment'){
+            populateContributingDash(d.id,d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.plan_target)||2000);
+          } else {
+            populateFundedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
+          }
+        } else if(d.status==='contributing'){
+          populateContributingDash(d.id,d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.plan_target)||2000);
+        } else if(d.status==='started'){
+          populateStartedDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.plan_target)||2000);
         } else if(d.status==='processing'){
           populateProcessingDash(d.plan_label||'Plan',d.crypto||'BTC',parseFloat(d.invested)||0,parseFloat(d.return_amount)||0);
         } else if(d.status==='approved'){
@@ -2270,6 +2457,31 @@ async function restoreSession(){
         } else {
           userHasInvestments=false;sidebarPortfolioVal='0.00';renderSidebars();
         }
+        // If primary is approved, also append any active Group Plan installment as a secondary card
+        if(d.status==='approved'){
+          var _gpDep=allDeps.find(function(x){return x.deposit_type==='installment'&&(x.status==='contributing'||x.status==='pending'||x.status==='started')&&x.id!==d.id;});
+          if(_gpDep){
+            var _fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+            var _gpContrib=parseFloat(_gpDep.invested)||0;
+            var _gpTarget=parseFloat(_gpDep.plan_target)||2000;
+            var _gpPct=Math.min(100,Math.round((_gpContrib/_gpTarget)*100));
+            var _gpRow=document.getElementById('dash-active-plans-row');
+            if(_gpRow){
+              _gpRow.innerHTML+=
+                '<div class="active-plan-card" style="margin-top:12px;">'
+                +'<div class="apc-label">Group Plan · '+(_gpDep.crypto||'BTC')+'</div>'
+                +'<div style="margin:10px 0 6px;">'
+                +'<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:5px;"><span>'+_fmtD2(_gpContrib)+' contributed</span><span>'+_fmtD2(_gpTarget)+' goal</span></div>'
+                +'<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:7px;"><div style="background:linear-gradient(90deg,#0058FF,#00E676);height:7px;border-radius:6px;width:'+_gpPct+'%;"></div></div>'
+                +'<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:4px;">'+_gpPct+'% complete</div>'
+                +'</div>'
+                +'<div class="apc-status"><div class="apc-dot" style="background:#FFA500;animation:pulse 1.5s infinite;"></div>Contributing · '+_fmtD2(_gpContrib)+' of '+_fmtD2(_gpTarget)+'</div>'
+                +'<div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,0.4);">Go to <strong style="color:#4D9DFF;cursor:pointer;" onclick="showAppPage(\'invest\')">Invest →</strong> to add your next installment.</div>'
+                +'</div>';
+            }
+          }
+        }
+        applyAggregateStats(allDeps);
       } else {
         userHasInvestments=false;sidebarPortfolioVal='0.00';renderSidebars();
       }
@@ -2668,7 +2880,7 @@ function exitDemoMode(){
   renderSidebars();
 }
 function populateProcessingDash(planLabel,crypto,invested,returnAmt){
-  var profit=returnAmt-invested;
+  var profit=Math.max(0,returnAmt-invested);
   userHasInvestments=true;
   sidebarPortfolioVal=fmtD2(invested);
   renderSidebars();
@@ -2743,14 +2955,14 @@ function populateApprovedDash(planLabel,crypto,invested,returnAmt){
   var dg2=document.getElementById('dash-time-greeting2');if(dg2)dg2.textContent=greet;
   if(currentUser){var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;}
   var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
-  var profit=returnAmt-invested;
+  var profit=Math.max(0,returnAmt-invested);
   var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(invested);
   var ev=document.getElementById('dash-earned-val');
-  if(ev){ev.textContent=fmtD(profit);var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
+  if(ev){ev.textContent=profit>0?fmtD(profit):'——';var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
   var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='0';
-  var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=fmtD(returnAmt);
-  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='↑ +'+fmtD(profit)+' profit included';hc.style.color='rgba(0,230,118,0.8)';}
-  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent=fmtD(profit);
+  var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=returnAmt>0?fmtD(returnAmt):fmtD(invested);
+  var hc=document.getElementById('dash-hero-change');if(hc){if(profit>0){hc.textContent='↑ +'+fmtD(profit)+' profit included';hc.style.color='rgba(0,230,118,0.8)';}else{hc.textContent='Returns credited to account';hc.style.color='rgba(77,157,255,0.8)';}}
+  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent=profit>0?fmtD(profit):'——';
   var qlbl2=document.querySelector('.qs-card .qs-label');if(qlbl2)qlbl2.textContent='Total Earned';
   var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Returns credited';
   var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
@@ -2759,18 +2971,36 @@ function populateApprovedDash(planLabel,crypto,invested,returnAmt){
   var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Credited to account';
   var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Your investment has been completed.';
   var row=document.getElementById('dash-active-plans-row');
-  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Investment completed</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Completed · Withdraw available</div><button onclick="openWithdrawalModal('+returnAmt+')" style="margin-top:14px;width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↑ Request Withdrawal</button></div>';}
+  if(row){row.innerHTML='<div class="active-plan-card"><div class="apc-label">'+planLabel+' · '+crypto+'</div><div class="apc-amounts"><span class="apc-invest">'+fmtD(invested)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(0,230,118,0.9);">'+fmtD(returnAmt)+'</span></div><div class="apc-timer" style="color:rgba(0,230,118,0.7);">✓ Investment completed</div><div class="apc-status"><div class="apc-dot" style="background:#00E676;"></div>Completed · Withdraw available</div><button onclick="openWithdrawalModal()" style="margin-top:14px;width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#00C853,#00E676);color:#000;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;">↑ Request Withdrawal</button></div>';}
   var al=document.getElementById('dash-activity-list');
-  if(al){al.innerHTML='<div class="activity-item"><div class="act-icon" style="background:rgba(0,230,118,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="act-info"><div class="act-title">Returns Credited</div><div class="act-sub">'+planLabel+' · '+crypto+' · '+fmtD(invested)+' invested</div></div><div class="act-right"><div class="act-amt" style="color:rgba(0,230,118,0.9);">+'+fmtD(profit)+'</div><div class="act-time">Approved</div></div></div>';}
-  var fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
-  var rh2=document.getElementById('returns-history-rows');
-  if(rh2){rh2.innerHTML='<div class="return-row"><div class="ret-icon-wrap" style="background:rgba(0,230,118,0.08);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="ret-plan">'+planLabel+' · '+crypto+'</div><div class="ret-sub">Returns released by admin</div></div><div><span class="ret-status" style="color:rgba(0,230,118,0.9);background:rgba(0,230,118,0.08);padding:3px 8px;border-radius:12px;font-size:11px;">● Approved</span></div><div class="ret-invested">'+fmtD2(invested)+'</div><div class="ret-amount" style="color:rgba(0,230,118,0.9);">'+fmtD2(returnAmt)+'</div></div>';}
-  var rth2=document.getElementById('returns-total-heading');if(rth2)rth2.innerHTML=fmtD2(profit)+' <span style="font-size:16px;color:rgba(255,255,255,0.3);font-weight:700;">total earned</span>';
-  var rsp2=document.getElementById('returns-stat-profit');if(rsp2)rsp2.textContent=fmtD2(profit);
-  var rsr2=document.getElementById('returns-stat-roi');if(rsr2){rsr2.textContent='↑ +'+fmtD2(profit)+' credited';rsr2.style.color='rgba(0,230,118,0.9)';}
-  var rspn2=document.getElementById('returns-stat-plans');if(rspn2)rspn2.textContent='1';
-  var rsi2=document.getElementById('returns-stat-invested');if(rsi2)rsi2.textContent=fmtD2(invested);
+  if(al){al.innerHTML='<div class="activity-item"><div class="act-icon" style="background:rgba(0,230,118,0.08);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#00E676" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div class="act-info"><div class="act-title">Returns Credited</div><div class="act-sub">'+planLabel+' · '+crypto+' · '+fmtD(invested)+' invested</div></div><div class="act-right"><div class="act-amt" style="color:rgba(0,230,118,0.9);">'+(profit>0?'+'+fmtD(profit):'Returns ready')+'</div><div class="act-time">Approved</div></div></div>';}
   syncReturnsState();chartsInited=false;initCharts();
+  // Async check: if profits fully withdrawn, swap card for celebration state
+  if(returnAmt>0&&supa&&currentUser&&currentUser.email){
+    supa.from('withdrawals').select('amount,status').eq('user_email',currentUser.email).in('status',['approved','pending']).then(function(res){
+      var _wds=res.data||[];
+      var _totalWD=_wds.reduce(function(s,w){return s+(parseFloat(w.amount)||0);},0);
+      var _avail=Math.max(0,returnAmt-_totalWD);
+      if(_avail<=0&&_totalWD>0){
+        var _row=document.getElementById('dash-active-plans-row');
+        if(_row){
+          var _fmtD2=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+          _row.innerHTML='<div style="border-radius:18px;background:linear-gradient(135deg,rgba(0,60,30,0.55),rgba(0,30,15,0.7));border:1px solid rgba(0,230,118,0.25);padding:28px 22px;text-align:center;animation:celebIn 0.6s cubic-bezier(.22,1,.36,1) both;">'
+            +'<div style="font-size:38px;margin-bottom:8px;animation:celebBounce 1s ease 0.3s both;">🏆</div>'
+            +'<div style="font-size:18px;font-weight:900;color:#00E676;font-family:\'Sora\',sans-serif;letter-spacing:-0.01em;margin-bottom:4px;">All Done!</div>'
+            +'<div style="font-size:13px;color:rgba(255,255,255,0.55);margin-bottom:18px;">Your profits have been fully withdrawn — well earned.</div>'
+            +'<div style="display:flex;justify-content:center;gap:24px;margin-bottom:20px;">'
+            +'<div style="text-align:center;"><div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Invested</div><div style="font-weight:800;color:#fff;font-size:15px;">'+_fmtD2(invested)+'</div></div>'
+            +'<div style="width:1px;background:rgba(255,255,255,0.08);"></div>'
+            +'<div style="text-align:center;"><div style="font-size:11px;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">Total Withdrawn</div><div style="font-weight:800;color:#00E676;font-size:15px;">'+_fmtD2(_totalWD)+'</div></div>'
+            +'</div>'
+            +'<button onclick="showAppPage(\'invest\')" style="padding:10px 28px;border-radius:50px;border:1px solid rgba(0,230,118,0.3);background:transparent;color:#00E676;font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;letter-spacing:0.04em;">+ Start New Investment</button>'
+            +'</div>';
+        }
+        var _ds=document.getElementById('dash-funded-sub');if(_ds)_ds.textContent='All profits successfully withdrawn.';
+      }
+    });
+  }
 }
 function populateCancelledDash(planLabel,crypto,invested){
   userHasInvestments=true;
@@ -2808,47 +3038,144 @@ function populateCancelledDash(planLabel,crypto,invested){
   var rsi2=document.getElementById('returns-stat-invested');if(rsi2)rsi2.textContent=fmtD2(invested);
   syncReturnsState();chartsInited=false;initCharts();
 }
+var _activeDepositId=null;var _activeDepositContributed=0;var _activeDepositTarget=2000;
+function populateContributingDash(depId,planLabel,crypto,contributed,target){
+  _activeDepositId=depId;_activeDepositContributed=contributed;_activeDepositTarget=target;
+  userHasInvestments=true;
+  sidebarPortfolioVal=contributed>=1000?contributed.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):contributed.toFixed(2);
+  saveSession();renderSidebars();
+  var es=document.getElementById('dash-empty-state');var fs=document.getElementById('dash-funded-state');var db=document.getElementById('dash-demo-bar');
+  if(es)es.style.display='none';if(fs)fs.style.display='block';if(db)db.style.display='none';
+  var h=new Date().getHours();var greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  var dg2=document.getElementById('dash-time-greeting2');if(dg2)dg2.textContent=greet;
+  if(currentUser){var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;}
+  var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+  var pct=Math.min(100,Math.round((contributed/target)*100));
+  var remaining=Math.max(0,target-contributed);
+  var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(contributed);
+  var ev=document.getElementById('dash-earned-val');if(ev){ev.textContent='——';var elbl=ev.closest('.dwb-stat');if(elbl){var lbl=elbl.querySelector('.dwb-stat-label');if(lbl)lbl.textContent='Total Earned';}}
+  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
+  var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=fmtD(contributed);
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='Contributing · '+pct+'% of $'+target.toLocaleString('en-US')+' goal';hc.style.color='rgba(255,165,0,0.85)';}
+  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='——';
+  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Pending';
+  var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
+  var qps=document.getElementById('dash-qs-plans-sub');if(qps)qps.textContent='Contributing';
+  var qr=document.getElementById('dash-qs-return');if(qr)qr.textContent='——';
+  var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Pending';
+  var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Payment confirmed — keep adding funds to reach your $'+target.toLocaleString('en-US')+' goal.';
+  var row=document.getElementById('dash-active-plans-row');
+  if(row){row.innerHTML='<div class="active-plan-card">'
+    +'<div class="apc-label">'+planLabel+' · '+crypto+'</div>'
+    +'<div style="margin:12px 0 8px;">'
+    +'<div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;"><span>'+fmtD(contributed)+' contributed</span><span>'+fmtD(target)+' goal</span></div>'
+    +'<div style="background:rgba(255,255,255,0.08);border-radius:6px;height:8px;">'
+    +'<div style="background:linear-gradient(90deg,#0058FF,#00E676);height:8px;border-radius:6px;width:'+pct+'%;transition:width 0.5s;"></div></div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:5px;">'+pct+'% complete · '+fmtD(remaining)+' remaining</div>'
+    +'</div>'
+    +'<div class="apc-status"><div class="apc-dot" style="background:#FFA500;animation:pulse 1.5s infinite;"></div>Contributing · Payment confirmed</div>'
+    +'<div style="margin-top:14px;padding:12px;border-radius:10px;background:rgba(255,165,0,0.07);border:1px solid rgba(255,165,0,0.2);font-size:12px;color:rgba(255,255,255,0.55);line-height:1.6;">To add your next installment, go to <strong style="color:#FFA500;cursor:pointer;" onclick="showAppPage(\'invest\')">Invest →</strong> and select your amount. Each payment adds to your total until you reach '+fmtD(target)+'.</div>'
+    +'</div>';}
+  syncReturnsState();chartsInited=false;initCharts();
+}
+function populateStartedDash(planLabel,crypto,contributed,target){
+  userHasInvestments=true;
+  sidebarPortfolioVal=contributed>=1000?contributed.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):contributed.toFixed(2);
+  saveSession();renderSidebars();
+  var es=document.getElementById('dash-empty-state');var fs=document.getElementById('dash-funded-state');var db=document.getElementById('dash-demo-bar');
+  if(es)es.style.display='none';if(fs)fs.style.display='block';if(db)db.style.display='none';
+  var h=new Date().getHours();var greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  var dg2=document.getElementById('dash-time-greeting2');if(dg2)dg2.textContent=greet;
+  if(currentUser){var dn2=document.getElementById('dash-user-name2');if(dn2)dn2.textContent=currentUser.name;}
+  var fmtD=function(n){return n>=1000?'$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):'$'+n.toFixed(2);};
+  var pv=document.getElementById('dash-portfolio-val');if(pv)pv.textContent=fmtD(contributed);
+  var ev=document.getElementById('dash-earned-val');if(ev){ev.textContent='——';}
+  var ac=document.getElementById('dash-active-count');if(ac)ac.textContent='1';
+  var hp=document.getElementById('dash-hero-portfolio');if(hp)hp.textContent=fmtD(contributed);
+  var hc=document.getElementById('dash-hero-change');if(hc){hc.textContent='Investment will start shortly';hc.style.color='rgba(176,106,255,0.9)';}
+  var qe=document.getElementById('dash-qs-earned');if(qe)qe.textContent='——';
+  var qes=document.getElementById('dash-qs-earned-sub');if(qes)qes.textContent='Pending';
+  var qp=document.getElementById('dash-qs-plans');if(qp)qp.textContent='1';
+  var qps=document.getElementById('dash-qs-plans-sub');if(qps)qps.textContent='Active';
+  var qr=document.getElementById('dash-qs-return');if(qr)qr.textContent='——';
+  var qrs=document.getElementById('dash-qs-return-sub');if(qrs)qrs.textContent='Pending';
+  var ds=document.getElementById('dash-funded-sub');if(ds)ds.textContent='Your investment has been started. Returns will be credited shortly.';
+  var row=document.getElementById('dash-active-plans-row');
+  if(row){row.innerHTML='<div class="active-plan-card">'
+    +'<div class="apc-label">'+planLabel+' · '+crypto+'</div>'
+    +'<div class="apc-amounts"><span class="apc-invest">'+fmtD(contributed)+'</span><span class="apc-arrow">→</span><span class="apc-return" style="color:rgba(176,106,255,0.6);">——</span></div>'
+    +'<div class="apc-timer" style="color:rgba(176,106,255,0.8);margin-top:8px;">⏳ Investment will start shortly</div>'
+    +'<div class="apc-status" style="margin-top:8px;"><div class="apc-dot" style="background:#B06AFF;animation:pulse 1.5s infinite;"></div>Started · Returns pending</div>'
+    +'</div>';}
+  syncReturnsState();chartsInited=false;initCharts();
+}
 async function confirmPaymentSent(){
-  // Block if user already has an active plan
-  if(currentUser&&supa){
-    var {data:existing}=await supa.from('deposits').select('id,status').eq('user_email',currentUser.email).in('status',['pending','processing','approved']);
-    if(existing&&existing.length>0){
-      var errEl=document.getElementById('dep-active-err');
-      if(errEl){errEl.style.display='block';}
-      else{alert('You already have an active investment plan. You cannot start a new one until your current plan is completed or cancelled.');}
-      return;
-    }
-  }
-  if(selectedTierId&&currentUser&&supa){
-    var _tier=ALL_TIERS.find(function(t){return t.id===selectedTierId;});
-    if(_tier){
-      var _pLabel=(currentPlan==='personal'?'Personal':'Group')+' Plan';
-      var _ssEl=document.getElementById('ss-img');
-      var _ssB64=(_ssEl&&_ssEl.src&&_ssEl.src.startsWith('data:'))?_ssEl.src:null;
-      var {error:depErr}=await supa.from('deposits').insert({
-        id:'dep_'+Date.now(),
-        user_id:currentUser.id||'',
-        user_name:currentUser.name||'',
-        user_email:currentUser.email||'',
-        plan_label:_pLabel,
-        crypto:currentDepositCrypto||'BTC',
-        invested:_tier.amountInvested,
-        screenshot_b64:_ssB64,
-        status:'pending',
+  if(!selectedTierId||!currentUser||!supa)return;
+  var _tier=ALL_TIERS.find(function(t){return t.id===selectedTierId;});
+  if(!_tier)return;
+  var _isInstallment=(currentPlan==='group');
+  var _pLabel=(currentPlan==='personal'?'Personal':'Group')+' Plan';
+  var _ssEl=document.getElementById('ss-img');
+  var _ssB64=(_ssEl&&_ssEl.src&&_ssEl.src.startsWith('data:'))?_ssEl.src:null;
+  // Fetch all user deposits
+  var {data:allDeps}=await supa.from('deposits').select('id,status,deposit_type,invested,plan_target').eq('user_email',currentUser.email);
+  allDeps=allDeps||[];
+  if(_isInstallment){
+    // Group Plan: never block. Find existing installment deposit (pending or contributing) to top up.
+    var _existingDep=allDeps.find(function(d){return d.deposit_type==='installment'&&(d.status==='pending'||d.status==='contributing');});
+    var depErr=null;
+    if(_existingDep){
+      var newTotal=(parseFloat(_existingDep.invested)||0)+_tier.amountInvested;
+      var {error:upErr}=await supa.from('deposits').update({invested:newTotal,screenshot_b64:_ssB64,status:'pending'}).eq('id',_existingDep.id);
+      depErr=upErr;
+    } else {
+      var {error:insErr}=await supa.from('deposits').insert({
+        id:'dep_'+Date.now(),user_id:currentUser.id||'',user_name:currentUser.name||'',user_email:currentUser.email||'',
+        plan_label:_pLabel,crypto:currentDepositCrypto||'BTC',invested:_tier.amountInvested,
+        screenshot_b64:_ssB64,status:'pending',deposit_type:'installment',plan_target:2000,
         submitted_at:new Date().toISOString()
       });
-      if(depErr){alert('Submission error: '+depErr.message);return;}
+      depErr=insErr;
     }
+    if(depErr){alert('Submission error: '+depErr.message);return;}
+  } else {
+    // Personal Plan: block if already has single plan pending/processing, or any plan started
+    var blocked=allDeps.some(function(d){
+      if(d.status==='started')return true;
+      if(d.deposit_type!=='installment'&&(d.status==='pending'||d.status==='processing'))return true;
+      return false;
+    });
+    if(blocked){
+      var errEl=document.getElementById('dep-active-err');
+      if(errEl){errEl.style.display='block';}
+      else{alert('You already have an active investment plan. You cannot start a new one until your current plan is completed.');}
+      return;
+    }
+    var {error:insErr2}=await supa.from('deposits').insert({
+      id:'dep_'+Date.now(),user_id:currentUser.id||'',user_name:currentUser.name||'',user_email:currentUser.email||'',
+      plan_label:_pLabel,crypto:currentDepositCrypto||'BTC',invested:_tier.amountInvested,
+      screenshot_b64:_ssB64,status:'pending',deposit_type:'single',plan_target:null,
+      submitted_at:new Date().toISOString()
+    });
+    if(insErr2){alert('Submission error: '+insErr2.message);return;}
   }
   if(countdownInterval)clearInterval(countdownInterval);
   document.getElementById('deposit-main-content').style.display='none';
   document.getElementById('deposit-success').classList.add('show');
-  // Populate funded dashboard with real investment
+  // Populate dashboard after submit
   if(selectedTierId){
     var tier=ALL_TIERS.find(function(t){return t.id===selectedTierId;});
     if(tier){
       var pLabel=(currentPlan==='personal'?'Personal':'Group')+' Plan';
-      populateFundedDash(pLabel,currentDepositCrypto,tier.amountInvested,tier.returnAmount);
+      if(currentPlan==='group'){
+        // Find updated total from allDeps (already fetched above)
+        var groupDep=allDeps.find(function(d){return d.deposit_type==='installment'&&(d.status==='pending'||d.status==='contributing');});
+        var newContributed=groupDep?(parseFloat(groupDep.invested)||0)+tier.amountInvested:tier.amountInvested;
+        var tempId=groupDep?groupDep.id:'new';
+        populateContributingDash(tempId,pLabel,currentDepositCrypto,newContributed,2000);
+      } else {
+        populateFundedDash(pLabel,currentDepositCrypto,tier.amountInvested,tier.returnAmount);
+      }
     }
   }
   // No countdown — return credited within 48 hours
@@ -2870,19 +3197,94 @@ async function confirmPaymentSent(){
 } // end confirmPaymentSent
 
 var _wdAmount=0;
-function openWithdrawalModal(amount){
-  _wdAmount=amount||0;
+async function openWithdrawalModal(){
+  // Always fetch FRESH withdrawal total from DB so available balance is accurate
+  // regardless of whether user came from dashboard or returns page
   var err=document.getElementById('wd-err');var ok=document.getElementById('wd-ok');
   if(err)err.style.display='none';if(ok)ok.style.display='none';
   var addr=document.getElementById('wd-address');if(addr)addr.value='';
   var amtInp=document.getElementById('wd-amount-input');if(amtInp)amtInp.value='';
   var avail=document.getElementById('wd-avail-val');
-  if(avail&&_wdAmount>0)avail.textContent='$'+(_wdAmount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));
-  else if(avail)avail.textContent='—';
+  if(avail){avail.textContent='Loading…';avail.style.color='rgba(255,255,255,0.3)';}
   document.getElementById('withdrawal-overlay').classList.add('open');
+  // Compute available = total approved return_amount - sum of non-rejected withdrawals
+  var approvedReturn=_allUserDeps.filter(function(d){return d.status==='approved';}).reduce(function(s,d){return s+(parseFloat(d.return_amount)||0);},0);
+  var alreadyWD=0;
+  if(supa&&currentUser&&currentUser.email){
+    var {data:wds}=await supa.from('withdrawals').select('amount,status').eq('user_email',currentUser.email).in('status',['approved','pending']);
+    alreadyWD=(wds||[]).reduce(function(s,w){return s+(parseFloat(w.amount)||0);},0);
+  }
+  _wdAmount=Math.max(0,approvedReturn-alreadyWD);
+  _totalAvailableWithdraw=_wdAmount;
+  if(avail&&_wdAmount>0){avail.textContent='$'+(_wdAmount.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}));avail.style.color='rgba(0,230,118,0.8)';}
+  else if(avail){avail.textContent='$0.00 — fully withdrawn';avail.style.color='rgba(255,80,80,0.7)';}
+  var wdNote=document.getElementById('wd-partial-note');
+  if(wdNote)wdNote.style.display=_wdAmount>0?'block':'none';
 }
 function closeWithdrawalModal(){
   document.getElementById('withdrawal-overlay').classList.remove('open');
+}
+function openAddFundsModal(){
+  if(!_activeDepositId){return;}
+  var remaining=Math.max(0,_activeDepositTarget-_activeDepositContributed);
+  var rem=document.getElementById('af-remaining');
+  if(rem)rem.textContent='$'+remaining.toLocaleString('en-US',{minimumFractionDigits:2})+' remaining to reach $'+_activeDepositTarget.toLocaleString('en-US')+' goal';
+  var ai=document.getElementById('af-amount');if(ai)ai.value='';
+  var err=document.getElementById('af-err');if(err){err.style.display='none';err.textContent='';}
+  var ok=document.getElementById('af-ok');if(ok){ok.style.display='none';ok.textContent='';}
+  clearAfSS();
+  document.getElementById('addfunds-overlay').classList.add('open');
+}
+function closeAddFundsModal(){
+  document.getElementById('addfunds-overlay').classList.remove('open');
+}
+function handleAfSSUpload(inp){
+  if(!inp.files||!inp.files[0])return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=document.getElementById('af-ss-img');
+    var prev=document.getElementById('af-ss-preview');
+    var ph=document.getElementById('af-ss-placeholder');
+    if(img)img.src=e.target.result;
+    if(prev)prev.style.display='inline-block';
+    if(ph)ph.style.display='none';
+  };
+  reader.readAsDataURL(inp.files[0]);
+}
+function clearAfSS(ev){
+  if(ev)ev.stopPropagation();
+  var inp=document.getElementById('af-ss-input');if(inp)inp.value='';
+  var img=document.getElementById('af-ss-img');if(img)img.src='';
+  var prev=document.getElementById('af-ss-preview');if(prev)prev.style.display='none';
+  var ph=document.getElementById('af-ss-placeholder');if(ph)ph.style.display='block';
+}
+async function submitAddFunds(){
+  var err=document.getElementById('af-err');var ok=document.getElementById('af-ok');
+  err.style.display='none';ok.style.display='none';
+  var amtRaw=parseFloat((document.getElementById('af-amount').value||'').trim());
+  if(!amtRaw||amtRaw<100){err.textContent='Minimum top-up is $100.';err.style.display='block';return;}
+  var ssEl=document.getElementById('af-ss-img');
+  var ssB64=(ssEl&&ssEl.src&&ssEl.src.startsWith('data:'))?ssEl.src:null;
+  if(!ssB64){err.textContent='Please upload a payment screenshot.';err.style.display='block';return;}
+  if(!_activeDepositId||!currentUser||!supa){err.textContent='Session error. Please refresh.';err.style.display='block';return;}
+  var newTotal=_activeDepositContributed+amtRaw;
+  var {error:upErr}=await supa.from('deposits').update({
+    invested:newTotal,
+    screenshot_b64:ssB64,
+    status:'pending'
+  }).eq('id',_activeDepositId);
+  if(upErr){err.textContent='Error: '+upErr.message;err.style.display='block';return;}
+  ok.textContent='Top-up submitted! Admin will confirm shortly.';ok.style.display='block';
+  setTimeout(async function(){
+    closeAddFundsModal();
+    // Refresh all deposits so aggregate stats are accurate
+    if(supa&&currentUser&&currentUser.email){
+      var {data:refreshed}=await supa.from('deposits').select('*').eq('user_email',currentUser.email).order('submitted_at',{ascending:false});
+      _allUserDeps=refreshed||[];
+    }
+    populateContributingDash(_activeDepositId,'Group Plan',currentDepositCrypto||'BTC',newTotal,_activeDepositTarget);
+    applyAggregateStats(_allUserDeps);
+  },2500);
 }
 async function submitWithdrawalRequest(){
   var net=(document.getElementById('wd-network').value||'').trim();
@@ -2907,7 +3309,7 @@ async function submitWithdrawalRequest(){
   });
   if(error){err.textContent='Error: '+error.message;err.style.display='block';return;}
   ok.textContent='✓ Withdrawal request submitted! Admin will process it shortly.';ok.style.display='block';
-  setTimeout(function(){closeWithdrawalModal();},2800);
+  setTimeout(function(){closeWithdrawalModal();syncReturnsState();},2800);
 }
 function closeDepositModal(){
   document.getElementById('deposit-overlay').classList.remove('open');
@@ -3123,7 +3525,7 @@ async function changePassword(){
 }
 
 // ── Dashboard live timers ──
-restoreSession();
+window.addEventListener('load', restoreSession);
 function startDashboardTimers(){
   var timers=[
     {id:'apc-timer-1',sec:47*3600+52*60+18},
